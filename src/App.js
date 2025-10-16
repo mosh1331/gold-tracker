@@ -65,7 +65,7 @@ export default function App() {
       //  return
 
       fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
-        .then(response => response)
+        .then(response => response.json)
         .then(result => {
           console.log(result,'result')
           console.log(result?.goldRate,'result goldRate')
