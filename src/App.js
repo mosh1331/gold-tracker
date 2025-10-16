@@ -62,10 +62,11 @@ export default function App() {
 
       await axios.get('https://gold-rate-api-ooqd.onrender.com/api/gold-rate')
         .then(result => {
-          console.log(result,'result')
-          console.log(result?.goldRate,'result goldRate')
-          setRateData(result)
-          saveCurrentRate(result)
+          const data = result?.data
+          console.log(data,'data')
+          console.log(data?.goldRate,'data goldRate')
+          setRateData(data)
+          saveCurrentRate(data)
           setLoading(false)
         })
         .catch(error => {
