@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Entries from './Entries'
 import dayjs from 'dayjs'
+import axios from 'axios'
 
 const loadEntries = () => {
   try {
@@ -49,14 +50,9 @@ export default function App() {
   const fetchRates = async () => {
     setLoading(true)
     try {
-      var myHeaders = new Headers()
-      myHeaders.append('Content-Type', 'application/json')
+     
 
-      var requestOptions = {
-        method: 'GET',
-        headers: myHeaders,
-        redirect: 'follow'
-      }
+   
       //   const result = {"success":true,"goldRate":"₹1,29,767.16","fetched_on":"2025-10-16T04:36:35.431Z"}
 
       //  setRateData(result)
@@ -64,8 +60,7 @@ export default function App() {
       //  setLoading(false)
       //  return
 
-      fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
-        .then(response => response.json)
+      await axios.get('https://gold-rate-api-ooqd.onrender.com/api/gold-rate')
         .then(result => {
           console.log(result,'result')
           console.log(result?.goldRate,'result goldRate')
