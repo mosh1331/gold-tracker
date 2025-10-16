@@ -10,8 +10,7 @@ const loadEntries = () => {
     return []
   }
 }
-const saveCurrentRate = entries =>
-  localStorage.setItem('currentRates', JSON.stringify(entries))
+const saveCurrentRate = entries => localStorage.setItem('currentRates', JSON.stringify(entries))
 
 const loadPreviousRates = () => {
   try {
@@ -21,8 +20,7 @@ const loadPreviousRates = () => {
     return {}
   }
 }
-const saveEntries = entries =>
-  localStorage.setItem('goldEntries', JSON.stringify(entries))
+const saveEntries = entries =>localStorage.setItem('goldEntries', JSON.stringify(entries))
 
 export default function App() {
   const [entries, setEntries] = useState(loadEntries())
@@ -35,7 +33,6 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [rateData, setRateData] = useState(loadPreviousRates())
   const [rates, setRates] = useState()
-  const [adjustment, setAdjustment] = useState(150)
 
   console.log(rateData,'rateData')
 
@@ -131,7 +128,6 @@ export default function App() {
   )
 
   const computeCurrentValue = pur => {
-    console.log(rates, 'rates')
     const rate = pur === '22k' ? rates?.rate_per_gm22k : rates?.rate_per_gm24k
     if (!rate) return null
     return rate * summary[pur].totalGrams
