@@ -37,6 +37,7 @@ export default function App() {
   const [rates, setRates] = useState()
   const [adjustment, setAdjustment] = useState(150)
 
+  console.log(rateData,'rateData')
 
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function App() {
         .then(response => response.text())
         .then(result => {
           console.log(result,'result')
+          console.log(result.goldRate,'result goldRate')
           setRateData(result)
           saveCurrentRate(result)
           setLoading(false)
