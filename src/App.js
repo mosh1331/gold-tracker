@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Entries from './Entries'
 import dayjs from 'dayjs'
 import axios from 'axios'
+import { formatIndianCurrency } from './utils'
 
 const loadEntries = () => {
   try {
@@ -21,7 +22,7 @@ const loadPreviousRates = () => {
     return {}
   }
 }
-const saveEntries = entries =>localStorage.setItem('goldEntries', JSON.stringify(entries))
+const saveEntries = entries => localStorage.setItem('goldEntries', JSON.stringify(entries))
 
 export default function App() {
   const [entries, setEntries] = useState(loadEntries())
@@ -35,8 +36,8 @@ export default function App() {
   const [rateData, setRateData] = useState(loadPreviousRates())
   const [rates, setRates] = useState()
 
-  console.log(rateData,'rateData')
-  console.log(rateData?.goldRate,'rateData goldRate')
+  console.log(rateData, 'rateData')
+  console.log(rateData?.goldRate, 'rateData goldRate')
 
 
   useEffect(() => {
@@ -50,9 +51,9 @@ export default function App() {
   const fetchRates = async () => {
     setLoading(true)
     try {
-     
 
-   
+
+
       //   const result = {"success":true,"goldRate":"₹1,29,767.16","fetched_on":"2025-10-16T04:36:35.431Z"}
 
       //  setRateData(result)
@@ -63,8 +64,8 @@ export default function App() {
       await axios.get('https://gold-rate-api-ooqd.onrender.com/api/gold-rate')
         .then(result => {
           const data = result?.data
-          console.log(data,'data')
-          console.log(data?.goldRate,'data goldRate')
+          console.log(data, 'data')
+          console.log(data?.goldRate, 'data goldRate')
           setRateData(data)
           saveCurrentRate(data)
           setLoading(false)
@@ -145,16 +146,20 @@ export default function App() {
 
   const getTotalInvestmentCurrentValue = () => {
     const total = (summary['24k'].totalGrams * rates?.rate_per_gm24k) + (summary['22k'].totalGrams * rates?.rate_per_gm22k)
-    return total.toFixed(2)
+    return total
   }
 
   const getTotalInvested = () => {
     const total = summary['24k'].totalPaid + summary['22k'].totalPaid
-    return total.toFixed(2)
+    return total
   }
 
   // setRates({'24k':rate_per_gm24k,'22k':rate_per_gm22k})
 
+  const getProfit = () => {
+    const amount = getTotalInvestmentCurrentValue() - getTotalInvested()
+    return formatIndianCurrency(amount)
+  }
 
   return (
     <div className='min-h-screen bg-gray-100 p-4 max-w-md mx-auto'>
@@ -171,34 +176,41 @@ export default function App() {
             <div className="flex justify-between">
               <span className="text-gray-600 font-medium">Total Invested Amount :</span>
               <span className="text-amber-500 font-semibold">
-                ₹ {getTotalInvested()}
+                ₹ {formatIndianCurrency(getTotalInvested())}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 font-medium">Total Investment Value:</span>
-              <span className="text-amber-500 font-semibold">
-                ₹ {getTotalInvestmentCurrentValue()}
+              <span className="text-gray-600 font-medium">Total Investment Current Value:</span>
+              <span className="text-green-900 font-semibold">
+                ₹ {formatIndianCurrency(getTotalInvestmentCurrentValue())}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 font-medium">P&L:</span>
+              <span className="text-green-500 font-semibold">
+                + ₹{getProfit() || 0}
               </span>
             </div>
 
+            <div className="flex">
+              <div className=" bg-white rounded-2xl shadow-lg p-6 w-full">
+                <p className="text-gray-600 font-medium text-sm"> 24k /gm</p>
+                <p className="text-gray-500 font-semibold">
+                  ₹{formatIndianCurrency(rates?.rate_per_gm24k) || 0}
+                </p>
+              </div>
 
-            <div className="flex justify-between">
-              <span className="text-gray-600 font-medium">Per gram 24k:</span>
-              <span className="text-amber-500 font-semibold">
-                ₹{rates?.rate_per_gm24k || 0}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-600 font-medium">Per gram 22k:</span>
-              <span className="text-amber-500 font-semibold">
-                ₹{rates?.rate_per_gm22k || 0}
-              </span>
+              <div className=" bg-white rounded-2xl shadow-lg p-6 w-full">
+                <p className="text-gray-600 font-medium text-sm">22k /gm</p>
+                <p className="text-gray-500 font-semibold">
+                  ₹{formatIndianCurrency(rates?.rate_per_gm22k) || 0}
+                </p>
+              </div>
             </div>
           </div>
 
           <p className="mt-4 text-gray-500 text-sm">
-            Last fetched on: <span className="font-medium">{dayjs(rates?.fetched_on).format("ddd ,DD-MM-YYYY hh:mm a") || 'N/A'}</span>
+            Last fetched on: <span className="font-medium">{rates?.fetched_on ? dayjs(rates?.fetched_on).format("ddd ,DD-MM-YYYY hh:mm a") : 'N/A'}</span>
           </p>
 
           <button
