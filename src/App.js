@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Entries from './Entries'
 
 const loadEntries = () => {
   try {
@@ -8,10 +9,21 @@ const loadEntries = () => {
     return []
   }
 }
+const saveCurrentRate = entries =>
+  localStorage.setItem('currentRates', JSON.stringify(entries))
+
+const loadPreviousRates = () => {
+  try {
+    const raw = localStorage.getItem('currentRates')
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
 const saveEntries = entries =>
   localStorage.setItem('goldEntries', JSON.stringify(entries))
 
-export default function App () {
+export default function App() {
   const [entries, setEntries] = useState(loadEntries())
   const [showModal, setShowModal] = useState(false)
   const [gram, setGram] = useState('')
@@ -19,40 +31,49 @@ export default function App () {
   const [amountPaid, setAmountPaid] = useState('')
   const [boughtFrom, setBoughtFrom] = useState('')
   const [purity, setPurity] = useState('24k')
-  const [rates, setRates] = useState({
-    '22k': null,
-    '24k': null,
-    fetched: false
-  })
+  const [loading, setLoading] = useState(false)
+  const [rateData, setRateData] = useState(loadPreviousRates())
+  const [rates, setRates] = useState()
   const [adjustment, setAdjustment] = useState(150)
 
- const fetchRates = async () => {
-      try {
-        var myHeaders = new Headers()
-        myHeaders.append('Content-Type', 'application/json')
 
-        var requestOptions = {
-          method: 'GET',
-          headers: myHeaders,
-          redirect: 'follow'
-        }
 
-        fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
-          .then(response => response.text())
-          .then(result => console.log(result))
-          .catch(error => console.log('error', error))
-          
-          return
-          const json =''
-        if (json?.rates) {
-          const r22 = json.rates['VIJA-22k']
-          const r24 = json.rates['VISA-24k']
-          setRates({ '22k': r22, '24k': r24, fetched: true })
-        }
-      } catch (err) {
-        console.error('Error fetching rates:', err)
+  useEffect(() => {
+    const rate = "₹1,29,114.94"
+    // const rate_24k = parseFloat(rateData?.goldRate?.replace(/[^0-9.]/g, ''));
+    const rate_24k = parseFloat(rate?.replace(/[^0-9.]/g, ''));
+    const rate_per_gm24k = rate_24k / 10
+    setRates({ rate_per_gm24k, rate_per_gm22k: rate_per_gm24k - 1100, rate_per_24k10gm: rate_24k })
+  }, [rateData])
+
+  const fetchRates = async () => {
+    setLoading(true)
+    try {
+      var myHeaders = new Headers()
+      myHeaders.append('Content-Type', 'application/json')
+
+      var requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+        redirect: 'follow'
       }
+
+      fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
+        .then(response => response.text())
+        .then(result => {
+          setRateData(result)
+          saveCurrentRate(result)
+          setLoading(false)
+        })
+        .catch(error => {
+          setLoading(false)
+          console.log('error', error)
+        })
+
+    } catch (err) {
+      console.error('Error fetching rates:', err)
     }
+  }
 
 
   const handleAdd = e => {
@@ -100,9 +121,11 @@ export default function App () {
   )
 
   const computeCurrentValue = pur => {
-    const rate = rates[pur]
+    console.log(rates, 'rates')
+    const rate = pur === '22k' ? rates?.rate_per_gm22k : rates?.rate_per_gm24k
     if (!rate) return null
-    return (rate - adjustment) * summary[pur].totalGrams
+    return rate * summary[pur].totalGrams
+    // return (rate - adjustment) * summary[pur].totalGrams
   }
 
   const computeProfitLoss = pur => {
@@ -117,26 +140,83 @@ export default function App () {
     saveEntries(updated)
   }
 
+  const getTotalInvestmentCurrentValue = () => {
+    const total = (summary['24k'].totalGrams * rates?.rate_per_gm24k) + (summary['22k'].totalGrams * rates?.rate_per_gm22k)
+    return total.toFixed(2)
+  }
+
+  const getTotalInvested = () => {
+    const total = summary['24k'].totalPaid + summary['22k'].totalPaid
+    return total.toFixed(2)
+  }
+
+  // setRates({'24k':rate_per_gm24k,'22k':rate_per_gm22k})
+
+
   return (
     <div className='min-h-screen bg-gray-100 p-4 max-w-md mx-auto'>
       <h1 className='text-2xl font-bold text-center mb-6'>📊 Gold Dashboard</h1>
 
       {/* Summary Cards */}
       <div className='grid grid-cols-1 gap-4 mb-6'>
-      <div>
-        <button onClick={()=>fetchRates()}>Refresh</button>
-      </div>
-        {['22k', '24k'].map(pur => (
-          <div key={pur} className='bg-white rounded-xl shadow p-4'>
-            <h2 className='text-lg font-semibold mb-2'>
-              {pur.toUpperCase()} Summary
-            </h2>
-            <p>Total Grams: {summary[pur].totalGrams.toFixed(2)}</p>
-            <p>Total Paid: ₹ {summary[pur].totalPaid.toFixed(2)}</p>
-            {rates.fetched && (
+        <div className="bg-white rounded-2xl shadow-lg p-6 w-full mx-auto">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">
+            Current 24k Gold Price
+          </h2>
+
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-gray-600 font-medium">Total Invested Amount :</span>
+              <span className="text-amber-500 font-semibold">
+                ₹ {getTotalInvested()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 font-medium">Total Investment Value:</span>
+              <span className="text-amber-500 font-semibold">
+                ₹ {getTotalInvestmentCurrentValue()}
+              </span>
+            </div>
+
+
+            <div className="flex justify-between">
+              <span className="text-gray-600 font-medium">Per gram 24k:</span>
+              <span className="text-amber-500 font-semibold">
+                ₹{rates?.rate_per_gm24k || 0}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-600 font-medium">Per gram 22k:</span>
+              <span className="text-amber-500 font-semibold">
+                ₹{rates?.rate_per_gm22k || 0}
+              </span>
+            </div>
+          </div>
+
+          <p className="mt-4 text-gray-500 text-sm">
+            Last fetched on: <span className="font-medium">{rates?.lastFetched || 'N/A'}</span>
+          </p>
+
+          <button
+            disabled={loading}
+            onClick={() => fetchRates()}
+            className="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Fetching...' : 'Refresh'}
+          </button>
+        </div>
+
+        <div className="flex justify-between gap-2 ">
+          {['22k', '24k'].map(pur => (
+            <div key={pur} className='w-full bg-white rounded-xl shadow p-4'>
+              <h2 className='text-lg font-semibold mb-2'>
+                {pur.toUpperCase()} Summary
+              </h2>
+              <p>Total Grams: {summary[pur].totalGrams.toFixed(2)}</p>
+              <p>Total Paid: ₹ {summary[pur].totalPaid.toFixed(2)}</p>
               <>
-                <p>Rate: ₹ {rates[pur]?.toFixed(2) ?? '--'}</p>
-                <p>Adjusted: ₹ {(rates[pur] - adjustment).toFixed(2)}</p>
+                <p>Rate: ₹ {pur === '22k' ? rates?.rate_per_gm22k : rates?.rate_per_gm24k ?? '--'}</p>
                 <p>
                   Current Value: ₹{' '}
                   {computeCurrentValue(pur)?.toFixed(2) ?? '--'}
@@ -151,55 +231,13 @@ export default function App () {
                   Profit/Loss: ₹ {computeProfitLoss(pur)?.toFixed(2) ?? '--'}
                 </p>
               </>
-            )}
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Entries List */}
-      <div className='bg-white rounded-xl shadow p-4 mb-20'>
-        <h2 className='text-lg font-semibold mb-3'>Entries</h2>
-        {entries.length === 0 && <p>No entries yet.</p>}
-        {entries.map(ent => (
-          <div
-            key={ent.id}
-            className={`rounded-lg p-3 mb-3 ${
-              ent.sold ? 'bg-gray-200' : 'bg-gray-50'
-            } border`}
-          >
-            <div className=''>
-              <div>
-                <p className='font-medium'>
-                  {ent.gram} g {ent.purity.toUpperCase()}
-                </p>
-                <p className='text-sm text-gray-600'>
-                  Date: {ent.date} | From: {ent.boughtFrom}
-                </p>
-                <p className='text-sm'>Paid: ₹ {ent.amountPaid}</p>
-                {ent.sold && (
-                  <p className='text-xs text-red-600 font-semibold'>SOLD</p>
-                )}
-              </div>
-              <div className='flex flex-col gap-2 mt-2'>
-                {!ent.sold && (
-                  <button
-                    onClick={() => markAsSold(ent.id)}
-                    className='bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm'
-                  >
-                    Mark Sold
-                  </button>
-                )}
-                <button
-                  onClick={() => removeEntry(ent.id)}
-                  className='bg-red-600 text-white px-3 py-1 rounded-lg text-sm'
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Entries entries={entries} markAsSold={markAsSold} removeEntry={removeEntry} />
 
       {/* Floating Add Button */}
       <button
