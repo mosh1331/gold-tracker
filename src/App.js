@@ -58,12 +58,12 @@ export default function App() {
         headers: myHeaders,
         redirect: 'follow'
       }
-        const result = {"success":true,"goldRate":"₹1,29,767.16","fetched_on":"2025-10-16T04:36:35.431Z"}
+      //   const result = {"success":true,"goldRate":"₹1,29,767.16","fetched_on":"2025-10-16T04:36:35.431Z"}
 
-       setRateData(result)
-       saveCurrentRate(result)
-       setLoading(false)
-       return
+      //  setRateData(result)
+      //  saveCurrentRate(result)
+      //  setLoading(false)
+      //  return
 
       fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
         .then(response => response.text())
