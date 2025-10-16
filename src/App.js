@@ -39,9 +39,9 @@ export default function App() {
 
 
   useEffect(() => {
-    const rate = "₹1,29,114.94"
-    // const rate_24k = parseFloat(rateData?.goldRate?.replace(/[^0-9.]/g, ''));
-    const rate_24k = parseFloat(rate?.replace(/[^0-9.]/g, ''));
+    // const rate = "₹1,29,114.94"
+    const rate_24k = parseFloat(rateData?.goldRate?.replace(/[^0-9.]/g, ''));
+    // const rate_24k = parseFloat(rate?.replace(/[^0-9.]/g, ''));
     const rate_per_gm24k = rate_24k / 10
     setRates({ rate_per_gm24k, rate_per_gm22k: rate_per_gm24k - 1100, rate_per_24k10gm: rate_24k })
   }, [rateData])
