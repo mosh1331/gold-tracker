@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Entries from './Entries'
+import dayjs from 'dayjs'
 
 const loadEntries = () => {
   try {
@@ -57,10 +58,17 @@ export default function App() {
         headers: myHeaders,
         redirect: 'follow'
       }
+        const result = {"success":true,"goldRate":"₹1,29,767.16","fetched_on":"2025-10-16T04:36:35.431Z"}
+
+       setRateData(result)
+       saveCurrentRate(result)
+       setLoading(false)
+       return
 
       fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
         .then(response => response.text())
         .then(result => {
+          console.log(result,'result')
           setRateData(result)
           saveCurrentRate(result)
           setLoading(false)
@@ -195,7 +203,7 @@ export default function App() {
           </div>
 
           <p className="mt-4 text-gray-500 text-sm">
-            Last fetched on: <span className="font-medium">{rates?.lastFetched || 'N/A'}</span>
+            Last fetched on: <span className="font-medium">{dayjs(rates?.fetched_on).format("ddd ,DD-MM-YYYY hh:mm a") || 'N/A'}</span>
           </p>
 
           <button
