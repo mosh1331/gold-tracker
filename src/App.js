@@ -35,6 +35,7 @@ export default function App() {
   const [rates, setRates] = useState()
 
   console.log(rateData,'rateData')
+  console.log(rateData?.goldRate,'rateData goldRate')
 
 
   useEffect(() => {
