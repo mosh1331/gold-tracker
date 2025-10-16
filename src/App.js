@@ -26,12 +26,9 @@ export default function App () {
   })
   const [adjustment, setAdjustment] = useState(150)
 
-  // fetch gold rates
-  useEffect(() => {
-    const fetchRates = async () => {
+ const fetchRates = async () => {
       try {
         var myHeaders = new Headers()
-        myHeaders.append('x-access-token', 'goldapi-h9jxismg9oc95f-io')
         myHeaders.append('Content-Type', 'application/json')
 
         var requestOptions = {
@@ -40,7 +37,7 @@ export default function App () {
           redirect: 'follow'
         }
 
-        fetch('https://www.goldapi.io/api/XAU/INR', requestOptions)
+        fetch('https://gold-rate-api-ooqd.onrender.com/api/gold-rate', requestOptions)
           .then(response => response.text())
           .then(result => console.log(result))
           .catch(error => console.log('error', error))
@@ -56,10 +53,7 @@ export default function App () {
         console.error('Error fetching rates:', err)
       }
     }
-    fetchRates()
-    const id = setInterval(fetchRates, 5 * 60 * 1000)
-    return () => clearInterval(id)
-  }, [])
+
 
   const handleAdd = e => {
     e.preventDefault()
@@ -129,6 +123,9 @@ export default function App () {
 
       {/* Summary Cards */}
       <div className='grid grid-cols-1 gap-4 mb-6'>
+      <div>
+        <button onClick={()=>fetchRates()}>Refresh</button>
+      </div>
         {['22k', '24k'].map(pur => (
           <div key={pur} className='bg-white rounded-xl shadow p-4'>
             <h2 className='text-lg font-semibold mb-2'>
